@@ -30,4 +30,19 @@ class User extends Authenticatable
             'password'          => 'hashed',
         ];
     }
+    // Relations
+    public function learnerProfile()
+    {
+        return $this->hasOne(LearnerProfile::class);
+    }
+
+    public function competenceScores()
+    {
+        return $this->hasMany(CompetenceScore::class);
+    }
+
+    public function submissions()
+    {
+        return $this->hasMany(Submission::class);
+    }
 }
