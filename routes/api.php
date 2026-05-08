@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LearnerController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -17,4 +18,10 @@ Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me',      [AuthController::class, 'me']);
     });
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/learner/{id}/dashboard',  [LearnerController::class, 'dashboard']);
+    Route::get('/learner/{id}/progress',   [LearnerController::class, 'progress']);
+    Route::patch('/learner/{id}/exam-date',[LearnerController::class, 'updateExamDate']);
 });
