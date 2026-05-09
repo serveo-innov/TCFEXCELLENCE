@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('appointments', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('learner_id');
+            $table->foreign('learner_id')->references('user_id')->on('learners')->cascadeOnDelete();
+            $table->uuid('coach_id');
+            $table->foreign('coach_id')->references('user_id')->on('coaches')->cascadeOnDelete();
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->timestamp('start_at');
+            $table->timestamp('end_at');
+            $table->enum('mode', ['ONLINE', 'PRESENTIAL']);
+            $table->string('meeting_link')->nullable();
+            $table->enum('status', ['SCHEDULED', 'DONE', 'CANCELLED'])->default('SCHEDULED');
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('appointments');
+    }
+};
