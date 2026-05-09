@@ -10,6 +10,7 @@ class Progress extends Model
 {
     use HasFactory, HasUuid;
 
+    public $timestamps = false; 
     public $incrementing = false;
     protected $keyType = 'string';
 
