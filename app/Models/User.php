@@ -15,7 +15,12 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
         'password',
+        'avatar_url',
+        'role',
+        'status',
+        'last_login_at',
     ];
 
     protected $hidden = [
@@ -27,22 +32,44 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_login_at'     => 'datetime',
             'password'          => 'hashed',
         ];
     }
+
     // Relations
-    public function learnerProfile()
+    public function admin()
     {
-        return $this->hasOne(LearnerProfile::class);
+        return $this->hasOne(Admin::class, 'user_id');
     }
 
-    public function competenceScores()
+    public function coach()
     {
-        return $this->hasMany(CompetenceScore::class);
+        return $this->hasOne(Coach::class, 'user_id');
     }
 
-    public function submissions()
+    public function learner()
     {
-        return $this->hasMany(Submission::class);
+        return $this->hasOne(Learner::class, 'user_id');
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class, 'user_id');
+    }
+
+    public function refreshTokens()
+    {
+        return $this->hasMany(RefreshToken::class, 'user_id');
+    }
+
+    public function passwordResets()
+    {
+        return $this->hasMany(PasswordReset::class, 'user_id');
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
     }
 }
