@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasUuid;
+
 class Learner extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuid;
 
     protected $primaryKey = 'user_id';
     public $incrementing = false;

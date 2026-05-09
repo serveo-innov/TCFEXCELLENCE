@@ -11,6 +11,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "openai-php/laravel": "^0.19.1",
+        "ramsey/uuid": "^4.9",
         "spatie/laravel-permission": "^7.4"
     },
     "require-dev": {

@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasUuid;
 
 class GroupMember extends Model
 {
-    use HasFactory;
-
+    use HasFactory, HasUuid;
     public $incrementing = false;
     protected $keyType = 'string';
 
