@@ -42,7 +42,15 @@ class CompetenceSeeder extends Seeder
         ];
 
         foreach ($competences as $competence) {
-            Competence::create($competence);
+            Competence::updateOrCreate(
+                [
+                    'code' => $competence['code']
+                ],
+                [
+                    'name'        => $competence['name'],
+                    'description' => $competence['description'],
+                    'weight'      => $competence['weight'],
+                ]);
         }
     }
 }
