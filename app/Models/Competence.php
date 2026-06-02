@@ -4,17 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\HasUuid;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Competence extends Model
 {
-    use HasFactory, HasUuid;
+    use HasFactory, HasUuids;
 
     public $incrementing = false;
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id',
         'code',
         'name',
         'description',
@@ -25,13 +24,11 @@ class Competence extends Model
         'weight' => 'decimal:2',
     ];
 
-    // Relation : une compétence a plusieurs progress
     public function progress()
     {
         return $this->hasMany(Progress::class, 'competence_id');
     }
 
-    // Relation : une compétence a plusieurs exercices
     public function exercises()
     {
         return $this->hasMany(Exercise::class, 'competence_id');

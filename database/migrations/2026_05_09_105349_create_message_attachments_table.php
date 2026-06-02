@@ -6,20 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('message_attachments', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
+            $table->uuid('message_id');
+            $table->foreign('message_id')->references('id')->on('messages')->cascadeOnDelete();
+            $table->string('file_url');
+            $table->string('file_name');
+            $table->string('file_type'); // 'pdf', 'audio', 'image'
+            $table->bigInteger('file_size'); // en bytes
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('message_attachments');

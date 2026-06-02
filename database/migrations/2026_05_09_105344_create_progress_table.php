@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreign('competence_id')->references('id')->on('competences')->cascadeOnDelete();
             $table->decimal('score', 5, 2)->default(0);
             $table->enum('level', ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'])->nullable();
-            $table->timestamp('updated_at')->nullable();
+            $table->timestamps(); // ← créé_at + updated_at
 
             $table->unique(['learner_id', 'competence_id']);
         });

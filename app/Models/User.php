@@ -11,11 +11,9 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
-    use HasUuids;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, HasUuids;
 
     public $incrementing = false;
-
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -24,7 +22,7 @@ class User extends Authenticatable
         'phone',
         'password',
         'avatar_url',
-        'role',
+        'role',        // ← ajouté
         'status',
         'last_login_at',
     ];
@@ -43,7 +41,7 @@ class User extends Authenticatable
         ];
     }
 
-    // Relations
+    // Relations profils
     public function admin()
     {
         return $this->hasOne(Admin::class, 'user_id');
@@ -59,19 +57,10 @@ class User extends Authenticatable
         return $this->hasOne(Learner::class, 'user_id');
     }
 
-    public function notifications()
+    // tcfNotifications — renommé pour éviter conflit avec Notifiable
+    public function tcfNotifications()
     {
-        return $this->hasMany(Notification::class, 'user_id');
-    }
-
-    public function refreshTokens()
-    {
-        return $this->hasMany(RefreshToken::class, 'user_id');
-    }
-
-    public function passwordResets()
-    {
-        return $this->hasMany(PasswordReset::class, 'user_id');
+        return $this->hasMany(TcfNotification::class, 'user_id');
     }
 
     public function messages()

@@ -4,53 +4,24 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Competence;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Str;
 
 class CompetenceSeeder extends Seeder
 {
     public function run(): void
     {
         $competences = [
-            [
-                'id'          => Uuid::uuid4()->toString(),
-                'code'        => 'CO',
-                'name'        => 'Compréhension Orale',
-                'description' => 'Capacité à comprendre des documents sonores en français.',
-                'weight'      => 0.35,
-            ],
-            [
-                'id'          => Uuid::uuid4()->toString(),
-                'code'        => 'CE',
-                'name'        => 'Compréhension Écrite',
-                'description' => 'Capacité à comprendre des documents écrits en français.',
-                'weight'      => 0.30,
-            ],
-            [
-                'id'          => Uuid::uuid4()->toString(),
-                'code'        => 'EO',
-                'name'        => 'Expression Orale',
-                'description' => 'Capacité à s\'exprimer oralement en français.',
-                'weight'      => 0.20,
-            ],
-            [
-                'id'          => Uuid::uuid4()->toString(),
-                'code'        => 'EE',
-                'name'        => 'Expression Écrite',
-                'description' => 'Capacité à s\'exprimer par écrit en français.',
-                'weight'      => 0.15,
-            ],
+            ['code' => 'CO', 'name' => 'Compréhension Orale',  'weight' => 35.00],
+            ['code' => 'CE', 'name' => 'Compréhension Écrite', 'weight' => 30.00],
+            ['code' => 'EO', 'name' => 'Expression Orale',     'weight' => 20.00],
+            ['code' => 'EE', 'name' => 'Expression Écrite',    'weight' => 15.00],
         ];
 
-        foreach ($competences as $competence) {
-            Competence::updateOrCreate(
-                [
-                    'code' => $competence['code']
-                ],
-                [
-                    'name'        => $competence['name'],
-                    'description' => $competence['description'],
-                    'weight'      => $competence['weight'],
-                ]);
+        foreach ($competences as $data) {
+            Competence::firstOrCreate(
+                ['code' => $data['code']],
+                array_merge($data, ['id' => Str::uuid()->toString()])
+            );
         }
     }
 }

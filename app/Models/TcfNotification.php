@@ -4,17 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\HasUuid;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
-class Notification extends Model
+class TcfNotification extends Model  // ← renommé
 {
-    use HasFactory, HasUuid;
+    use HasFactory, HasUuids;
+
+    protected $table = 'tcf_notifications'; // ← table renommée
 
     public $incrementing = false;
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id',
         'user_id',
         'type',
         'title',
@@ -30,7 +31,6 @@ class Notification extends Model
         'read_at' => 'datetime',
     ];
 
-    // Relation : une notification appartient à un utilisateur
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

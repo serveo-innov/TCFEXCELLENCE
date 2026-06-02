@@ -9,7 +9,7 @@ return [
     'models' => [
 
         /*
-         * When using the "HasPermissions" trait from this package, we need to know which
+         * When using the  "HasPermissions" trait from this package, we need to know which
          * Eloquent model should be used to retrieve your permissions. Of course, it
          * is often just the "Permission" model but you may use whatever you like.
          *
@@ -103,7 +103,7 @@ return [
          * that case, name this `model_uuid`.
          */
 
-        'model_morph_key' => 'model_id',
+        'model_morph_key' => 'model_uuid',
 
         /*
          * Change this if you want to use the teams feature and your related model's

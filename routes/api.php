@@ -1,37 +1,37 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LearnerController;
 use App\Http\Controllers\AdminController;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
-
-
+// Auth — routes publiques
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register'])->name('register');
-    Route::post('/login', [AuthController::class, 'login'])->name('login'); // ✅ nom ajouté
+    Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
+    Route::post('/login',    [AuthController::class, 'login'])->name('auth.login');
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-        Route::get('/me', [AuthController::class, 'me'])->name('me');
+        Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
+        Route::get('/me',      [AuthController::class, 'me'])->name('auth.me');
     });
 });
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/learner/{id}/dashboard',  [LearnerController::class, 'dashboard']);
-    Route::get('/learner/{id}/progress',   [LearnerController::class, 'progress']);
-    Route::patch('/learner/{id}/exam-date',[LearnerController::class, 'updateExamDate']);
-});
+// Apprenant — routes protégées
+Route::middleware(['auth:sanctum', 'role:SOLO|COACHED'])
+    ->prefix('learner')
+    ->group(function () {
+        Route::get('/{id}/dashboard',  [LearnerController::class, 'dashboard']);
+        Route::get('/{id}/progress',   [LearnerController::class, 'progress']);
+        Route::patch('/{id}/exam-date', [LearnerController::class, 'updateExamDate']);
+    });
 
-
-Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
-    Route::get('/learners',                [AdminController::class, 'learners']);
-    Route::get('/learners/export',         [AdminController::class, 'exportCsv']);
-    Route::get('/learners/{id}',           [AdminController::class, 'learnerProfile']);
-    Route::post('/learners/{id}/message',  [AdminController::class, 'sendCoachMessage']);
-    Route::get('/stats',                   [AdminController::class, 'stats']);
-});
+// Admin — routes protégées — export AVANT {id}
+Route::middleware(['auth:sanctum', 'role:ADMIN'])
+    ->prefix('admin')
+    ->group(function () {
+        Route::get('/learners/export',        [AdminController::class, 'exportCsv']);   // ← avant {id}
+        Route::get('/learners',               [AdminController::class, 'learners']);
+        Route::get('/learners/{id}',          [AdminController::class, 'learnerProfile']);
+        Route::post('/learners/{id}/message', [AdminController::class, 'sendCoachMessage']);
+        Route::get('/stats',                  [AdminController::class, 'stats']);
+    });

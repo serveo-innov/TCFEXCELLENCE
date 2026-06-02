@@ -4,18 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\HasUuid;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Progress extends Model
 {
-    use HasFactory, HasUuid;
+    use HasFactory, HasUuids;
 
-    public $timestamps = false; 
+    // $timestamps = true par défaut — on le retire car on a ajouté timestamps() en migration
     public $incrementing = false;
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id',
         'learner_id',
         'competence_id',
         'score',
@@ -26,13 +25,11 @@ class Progress extends Model
         'score' => 'decimal:2',
     ];
 
-    // Relation : un progress appartient à un apprenant
     public function learner()
     {
         return $this->belongsTo(Learner::class, 'learner_id', 'user_id');
     }
 
-    // Relation : un progress appartient à une compétence
     public function competence()
     {
         return $this->belongsTo(Competence::class, 'competence_id');
