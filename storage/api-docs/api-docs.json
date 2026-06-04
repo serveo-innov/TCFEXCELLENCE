@@ -15,6 +15,243 @@
         }
     ],
     "paths": {
+        "/admin/learners": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Liste paginée des apprenants",
+                "operationId": "83c864a064e407427539f16bc850e0e7",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "SOLO ou COACHED",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "SOLO",
+                                "COACHED"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "country",
+                        "in": "query",
+                        "description": "Filtre par pays",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "level",
+                        "in": "query",
+                        "description": "Niveau estimé",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "A1",
+                                "A2",
+                                "B1",
+                                "B2",
+                                "C1",
+                                "C2"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "inactive",
+                        "in": "query",
+                        "description": "Inactifs > 7j",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items par page",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste retournée avec succès"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Accès refusé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/learners/kpis": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "KPIs du tableau de bord admin",
+                "operationId": "5aa7c527103bd896eebf111c12bdae7d",
+                "responses": {
+                    "200": {
+                        "description": "KPIs retournés"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/learners/{id}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Profil complet d'un apprenant (drawer)",
+                "operationId": "9af377e0a870353eee3dd404a0dcb859",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Profil retourné"
+                    },
+                    "404": {
+                        "description": "Apprenant non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/learners/export": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Export CSV des apprenants",
+                "operationId": "9d46f65a6c868152cceaaf3de9af676c",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "SOLO",
+                                "COACHED"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier CSV téléchargeable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/learners/{id}/message": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Envoyer un message coach à un apprenant",
+                "operationId": "66bfc638622d0b5cc17a886c57c6b7b8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "message"
+                                ],
+                                "properties": {
+                                    "message": {
+                                        "type": "string",
+                                        "example": "Bravo pour vos progrès cette semaine !"
+                                    },
+                                    "is_pinned": {
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Message envoyé"
+                    },
+                    "404": {
+                        "description": "Apprenant non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/stats": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Statistiques globales",
+                "operationId": "6098e59d7949d9c2fbdc0ca82cbccf89",
+                "responses": {
+                    "200": {
+                        "description": "Statistiques retournées"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/auth/register": {
             "post": {
                 "tags": [
@@ -233,6 +470,10 @@
         }
     },
     "tags": [
+        {
+            "name": "Admin",
+            "description": "Admin"
+        },
         {
             "name": "Auth",
             "description": "Auth"
