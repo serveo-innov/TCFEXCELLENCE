@@ -26,7 +26,6 @@
                     {
                         "name": "type",
                         "in": "query",
-                        "description": "SOLO ou COACHED",
                         "schema": {
                             "type": "string",
                             "enum": [
@@ -38,7 +37,6 @@
                     {
                         "name": "country",
                         "in": "query",
-                        "description": "Filtre par pays",
                         "schema": {
                             "type": "string"
                         }
@@ -46,23 +44,13 @@
                     {
                         "name": "level",
                         "in": "query",
-                        "description": "Niveau estimé",
                         "schema": {
-                            "type": "string",
-                            "enum": [
-                                "A1",
-                                "A2",
-                                "B1",
-                                "B2",
-                                "C1",
-                                "C2"
-                            ]
+                            "type": "string"
                         }
                     },
                     {
                         "name": "inactive",
                         "in": "query",
-                        "description": "Inactifs > 7j",
                         "schema": {
                             "type": "boolean"
                         }
@@ -70,7 +58,6 @@
                     {
                         "name": "per_page",
                         "in": "query",
-                        "description": "Items par page",
                         "schema": {
                             "type": "integer",
                             "default": 20
@@ -79,10 +66,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Liste retournée avec succès"
-                    },
-                    "401": {
-                        "description": "Non authentifié"
+                        "description": "Liste retournée"
                     },
                     "403": {
                         "description": "Accès refusé"
@@ -100,7 +84,7 @@
                 "tags": [
                     "Admin"
                 ],
-                "summary": "KPIs du tableau de bord admin",
+                "summary": "KPIs du tableau de bord",
                 "operationId": "5aa7c527103bd896eebf111c12bdae7d",
                 "responses": {
                     "200": {
@@ -119,7 +103,7 @@
                 "tags": [
                     "Admin"
                 ],
-                "summary": "Profil complet d'un apprenant (drawer)",
+                "summary": "Profil complet d'un apprenant",
                 "operationId": "9af377e0a870353eee3dd404a0dcb859",
                 "parameters": [
                     {
@@ -136,7 +120,7 @@
                         "description": "Profil retourné"
                     },
                     "404": {
-                        "description": "Apprenant non trouvé"
+                        "description": "Non trouvé"
                     }
                 },
                 "security": [
@@ -151,7 +135,7 @@
                 "tags": [
                     "Admin"
                 ],
-                "summary": "Export CSV des apprenants",
+                "summary": "Export CSV",
                 "operationId": "9d46f65a6c868152cceaaf3de9af676c",
                 "parameters": [
                     {
@@ -168,7 +152,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Fichier CSV téléchargeable"
+                        "description": "Fichier CSV"
                     }
                 },
                 "security": [
@@ -183,7 +167,7 @@
                 "tags": [
                     "Admin"
                 ],
-                "summary": "Envoyer un message coach à un apprenant",
+                "summary": "Envoyer un message coach",
                 "operationId": "66bfc638622d0b5cc17a886c57c6b7b8",
                 "parameters": [
                     {
@@ -205,12 +189,10 @@
                                 ],
                                 "properties": {
                                     "message": {
-                                        "type": "string",
-                                        "example": "Bravo pour vos progrès cette semaine !"
+                                        "type": "string"
                                     },
                                     "is_pinned": {
-                                        "type": "boolean",
-                                        "example": false
+                                        "type": "boolean"
                                     }
                                 },
                                 "type": "object"
@@ -223,7 +205,154 @@
                         "description": "Message envoyé"
                     },
                     "404": {
-                        "description": "Apprenant non trouvé"
+                        "description": "Non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/learner/{id}/coach-message": {
+            "patch": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Modifier le dernier message coach",
+                "operationId": "8bb4e78ab66aa73b71e6811f3682f5cb",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "message"
+                                ],
+                                "properties": {
+                                    "message": {
+                                        "type": "string"
+                                    },
+                                    "is_pinned": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Message modifié"
+                    },
+                    "404": {
+                        "description": "Aucun message"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/learner/{id}/banner": {
+            "patch": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Activer/désactiver la bannière",
+                "operationId": "d7af1feccdfd77a19ace106df037dd78",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "show_banner"
+                                ],
+                                "properties": {
+                                    "show_banner": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Bannière mise à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/learner/{id}/note-privee": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Ajouter une note privée",
+                "operationId": "52e943c61e108feb955c9ee1851c8b59",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "note"
+                                ],
+                                "properties": {
+                                    "note": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Note enregistrée"
                     }
                 },
                 "security": [
@@ -458,6 +587,163 @@
                     }
                 ]
             }
+        },
+        "/learner/{id}/dashboard": {
+            "get": {
+                "tags": [
+                    "Apprenant"
+                ],
+                "summary": "Dashboard complet de l'apprenant",
+                "operationId": "70922a236034e573e92a8f53ab6c5c9c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dashboard retourné avec succès"
+                    },
+                    "403": {
+                        "description": "Accès refusé"
+                    },
+                    "404": {
+                        "description": "Apprenant non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/learner/{id}/progress": {
+            "get": {
+                "tags": [
+                    "Apprenant"
+                ],
+                "summary": "Progression par compétence",
+                "operationId": "4cb5b3950c15a83173b82a6255fdf45a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Progression retournée"
+                    },
+                    "403": {
+                        "description": "Accès refusé"
+                    },
+                    "404": {
+                        "description": "Apprenant non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/learner/{id}/exam-date": {
+            "patch": {
+                "tags": [
+                    "Apprenant"
+                ],
+                "summary": "Mettre à jour la date d'examen cible",
+                "operationId": "8d5b819576a35561c72013216d66f6f3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "target_exam_date"
+                                ],
+                                "properties": {
+                                    "target_exam_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-12-01"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Date mise à jour"
+                    },
+                    "403": {
+                        "description": "Accès refusé"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/learner/{id}/hide-banner": {
+            "patch": {
+                "tags": [
+                    "Apprenant"
+                ],
+                "summary": "Masquer la bannière d'incitation pour 7 jours",
+                "operationId": "5ba197d645ee4f96364736e3bc787b51",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bannière masquée"
+                    },
+                    "403": {
+                        "description": "Accès refusé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -477,6 +763,10 @@
         {
             "name": "Auth",
             "description": "Auth"
+        },
+        {
+            "name": "Apprenant",
+            "description": "Apprenant"
         }
     ]
 }
