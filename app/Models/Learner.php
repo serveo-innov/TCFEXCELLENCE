@@ -11,8 +11,8 @@ class Learner extends Model
     use HasFactory, HasUuids;
 
     protected $primaryKey = 'user_id';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing  = false;
+    protected $keyType    = 'string';
 
     protected $fillable = [
         'user_id',
@@ -23,6 +23,8 @@ class Learner extends Model
         'global_score',
         'is_expert_candidate',
         'last_active_at',
+        'banner_hidden_until',
+        'private_note',
     ];
 
     protected $casts = [
@@ -30,39 +32,35 @@ class Learner extends Model
         'global_score'        => 'decimal:2',
         'is_expert_candidate' => 'boolean',
         'last_active_at'      => 'datetime',
+        'banner_hidden_until' => 'datetime',
     ];
 
-    // Relation : un apprenant appartient à un utilisateur
+    // Relations
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relation : un apprenant a plusieurs progress
     public function progress()
     {
         return $this->hasMany(Progress::class, 'learner_id', 'user_id');
     }
 
-    // Relation : un apprenant a plusieurs soumissions
     public function submissions()
     {
         return $this->hasMany(Submission::class, 'learner_id', 'user_id');
     }
 
-    // Relation : un apprenant a plusieurs messages coach
     public function coachMessages()
     {
         return $this->hasMany(CoachMessage::class, 'learner_id', 'user_id');
     }
 
-    // Relation : un apprenant a plusieurs rendez-vous
     public function appointments()
     {
         return $this->hasMany(Appointment::class, 'learner_id', 'user_id');
     }
 
-    // Relation : un apprenant est membre de plusieurs groupes
     public function groupMembers()
     {
         return $this->hasMany(GroupMember::class, 'learner_id', 'user_id');

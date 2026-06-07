@@ -40,14 +40,18 @@ class LearnerDashboardResource extends JsonResource
             ->first();
 
         // Progression par compétence
-        $progress = $this->progress()->with('competence')->get()->map(fn($p) => [
-            'competence_id'   => $p->competence_id,
-            'competence_code' => $p->competence->code,
-            'competence_name' => $p->competence->name,
-            'weight'          => (float) $p->competence->weight,
-            'score'           => (float) $p->score,
-            'level'           => $p->level,
-        ]);
+        $progress = $this->progress()->with('competence')
+            ->get()
+            ->sortByDesc(fn($p) => $p->competence->weight)
+            ->values()
+            ->map(fn($p) => [
+                'competence_id'   => $p->competence_id,
+                'competence_code' => $p->competence->code,
+                'competence_name' => $p->competence->name,
+                'weight'          => (float) $p->competence->weight,
+                'score'           => (float) $p->score,
+                'level'           => $p->level,
+            ]);
 
         // Bannière visible ?
         $showBanner = $this->registration_type === 'SOLO'
