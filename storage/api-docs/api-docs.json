@@ -588,6 +588,415 @@
                 ]
             }
         },
+        "/exercises": {
+            "get": {
+                "tags": [
+                    "Exercices"
+                ],
+                "summary": "Liste des exercices disponibles",
+                "operationId": "a73cefe10c9f328c1541f4eb220a8371",
+                "parameters": [
+                    {
+                        "name": "competence",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "CO",
+                                "CE",
+                                "EO",
+                                "EE"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "LESSON",
+                                "PRACTICE",
+                                "QCM"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "level",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "A1",
+                                "A2",
+                                "B1",
+                                "B2",
+                                "C1",
+                                "C2"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Exercices retournés"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/exercises/{id}": {
+            "get": {
+                "tags": [
+                    "Exercices"
+                ],
+                "summary": "Détail d'un exercice avec ses questions QCM",
+                "operationId": "55de410b3137c415296f9188be90c68b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Exercice retourné"
+                    },
+                    "404": {
+                        "description": "Non trouvé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/exercises": {
+            "post": {
+                "tags": [
+                    "Admin - Exercices"
+                ],
+                "summary": "Créer un exercice",
+                "operationId": "061535cada05f120538315da800ebcfa",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "competence_id",
+                                    "type",
+                                    "level"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "competence_id": {
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "LESSON",
+                                            "PRACTICE",
+                                            "QCM"
+                                        ]
+                                    },
+                                    "level": {
+                                        "type": "string",
+                                        "enum": [
+                                            "A1",
+                                            "A2",
+                                            "B1",
+                                            "B2",
+                                            "C1",
+                                            "C2"
+                                        ]
+                                    },
+                                    "content": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Exercice créé"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/groups": {
+            "get": {
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Liste des groupes accessibles à l'utilisateur connecté",
+                "operationId": "bef7bc6436ad2524e81253beb2657bf9",
+                "responses": {
+                    "200": {
+                        "description": "Groupes retournés"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/groups/{id}/messages": {
+            "get": {
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Messages d'un groupe (pagination infinie)",
+                "operationId": "6bfbf64b95c9e9aeb5cf2bd29b29ecbd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "before",
+                        "in": "query",
+                        "description": "ID du message avant lequel charger",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Messages retournés"
+                    },
+                    "403": {
+                        "description": "Accès refusé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Envoyer un message dans un groupe",
+                "operationId": "55d7d9df9c14cdf4cba0dfcf8dfd8788",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "content": {
+                                        "type": "string"
+                                    },
+                                    "message_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "TEXT",
+                                            "FILE",
+                                            "AUDIO"
+                                        ]
+                                    },
+                                    "reply_to_id": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Message envoyé"
+                    },
+                    "403": {
+                        "description": "Accès refusé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/groups/{groupId}/messages/{messageId}/pin": {
+            "patch": {
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Épingler ou désépingler un message (coach uniquement)",
+                "operationId": "af0fb96d6e7e4647b89ee132bee0cad6",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "messageId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message épinglé/désépinglé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/groups/{groupId}/messages/{messageId}/hide": {
+            "patch": {
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Masquer un message silencieusement (coach uniquement)",
+                "operationId": "ab9097b1bf2fb94f64e961aefb715e9b",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "messageId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message masqué"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/groups/{groupId}/messages/{messageId}/react": {
+            "post": {
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Réagir à un message avec un emoji",
+                "operationId": "d4adac4172060d525288cc8fdbb6a332",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "messageId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "emoji"
+                                ],
+                                "properties": {
+                                    "emoji": {
+                                        "type": "string",
+                                        "example": "👍"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Réaction enregistrée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/learner/{id}/dashboard": {
             "get": {
                 "tags": [
@@ -744,6 +1153,167 @@
                     }
                 ]
             }
+        },
+        "/submissions": {
+            "post": {
+                "tags": [
+                    "Soumissions"
+                ],
+                "summary": "Soumettre une production (EE ou EO)",
+                "operationId": "74964a7978a12627f231ceed3ce23206",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "exercise_id",
+                                    "type"
+                                ],
+                                "properties": {
+                                    "exercise_id": {
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "TEXT",
+                                            "AUDIO",
+                                            "QCM"
+                                        ]
+                                    },
+                                    "content_text": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Soumission enregistrée, correction IA en cours"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/submissions/{id}/correction": {
+            "get": {
+                "tags": [
+                    "Soumissions"
+                ],
+                "summary": "Voir la correction validée d'une soumission",
+                "operationId": "50baff0fb19c36d7ef73e28219cd7fa7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Correction retournée"
+                    },
+                    "404": {
+                        "description": "Pas encore corrigé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/submissions/pending": {
+            "get": {
+                "tags": [
+                    "Admin - Corrections IA"
+                ],
+                "summary": "Liste des soumissions en attente de validation coach",
+                "operationId": "72dce676176e7a930e0c084d34f12745",
+                "responses": {
+                    "200": {
+                        "description": "Soumissions retournées"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/submissions/{id}/validate": {
+            "patch": {
+                "tags": [
+                    "Admin - Corrections IA"
+                ],
+                "summary": "Valider ou modifier la correction IA avant envoi à l'apprenant",
+                "operationId": "547491d7b893cb62ab0061c66ed8e80e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "corrected_text",
+                                    "score",
+                                    "feedback"
+                                ],
+                                "properties": {
+                                    "corrected_text": {
+                                        "type": "string"
+                                    },
+                                    "score": {
+                                        "type": "number"
+                                    },
+                                    "feedback": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Correction validée et envoyée à l'apprenant"
+                    },
+                    "404": {
+                        "description": "Soumission non trouvée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -765,8 +1335,28 @@
             "description": "Auth"
         },
         {
+            "name": "Exercices",
+            "description": "Exercices"
+        },
+        {
+            "name": "Admin - Exercices",
+            "description": "Admin - Exercices"
+        },
+        {
+            "name": "Chat",
+            "description": "Chat"
+        },
+        {
             "name": "Apprenant",
             "description": "Apprenant"
+        },
+        {
+            "name": "Soumissions",
+            "description": "Soumissions"
+        },
+        {
+            "name": "Admin - Corrections IA",
+            "description": "Admin - Corrections IA"
         }
     ]
 }

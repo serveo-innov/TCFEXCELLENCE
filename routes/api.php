@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LearnerController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\SubmissionController;
 
 // AUTH
 Route::prefix('auth')->group(function () {
@@ -26,7 +27,14 @@ Route::middleware(['auth:sanctum', 'role:SOLO|COACHED'])
         Route::patch('/{id}/hide-banner', [LearnerController::class, 'hideBanner']);
     });
 
-// CHAT — COACHED + ADMIN
+// SOUMISSIONS
+Route::middleware(['auth:sanctum', 'role:SOLO|COACHED'])
+    ->group(function () {
+        Route::post('/submissions',                       [SubmissionController::class, 'store']);
+        Route::get('/submissions/{id}/correction',        [SubmissionController::class, 'correction']);
+    });
+
+// CHAT
 Route::middleware(['auth:sanctum', 'role:SOLO|COACHED|ADMIN'])
     ->prefix('groups')
     ->group(function () {
@@ -42,20 +50,36 @@ Route::middleware(['auth:sanctum', 'role:SOLO|COACHED|ADMIN'])
 Route::middleware(['auth:sanctum', 'role:ADMIN'])
     ->prefix('admin')
     ->group(function () {
-        Route::get('/learners/export',             [AdminController::class, 'exportCsv']);
-        Route::get('/learners/kpis',               [AdminController::class, 'kpis']);
-        Route::get('/stats',                       [AdminController::class, 'stats']);
-        Route::get('/learners',                    [AdminController::class, 'learners']);
-        Route::get('/learners/{id}',               [AdminController::class, 'learnerProfile']);
-        Route::post('/learners/{id}/message',      [AdminController::class, 'sendCoachMessage']);
-        Route::patch('/learner/{id}/coach-message',[AdminController::class, 'updateCoachMessage']);
-        Route::patch('/learner/{id}/banner',       [AdminController::class, 'toggleBanner']);
-        Route::post('/learner/{id}/note-privee',   [AdminController::class, 'addPrivateNote']);
+        Route::get('/learners/export',              [AdminController::class, 'exportCsv']);
+        Route::get('/learners/kpis',                [AdminController::class, 'kpis']);
+        Route::get('/stats',                        [AdminController::class, 'stats']);
+        Route::get('/learners',                     [AdminController::class, 'learners']);
+        Route::get('/learners/{id}',                [AdminController::class, 'learnerProfile']);
+        Route::post('/learners/{id}/message',       [AdminController::class, 'sendCoachMessage']);
+        Route::patch('/learner/{id}/coach-message', [AdminController::class, 'updateCoachMessage']);
+        Route::patch('/learner/{id}/banner',        [AdminController::class, 'toggleBanner']);
+        Route::post('/learner/{id}/note-privee',    [AdminController::class, 'addPrivateNote']);
 
-        // Gestion groupes par admin
-        Route::post('/groups',                     [GroupController::class, 'store']);
-        Route::patch('/groups/{id}',               [GroupController::class, 'update']);
-        Route::delete('/groups/{id}',              [GroupController::class, 'destroy']);
-        Route::post('/groups/{id}/members',        [GroupController::class, 'addMember']);
-        Route::delete('/groups/{id}/members/{learnerId}', [GroupController::class, 'removeMember']);
+        // Groupes
+        Route::post('/groups',                             [GroupController::class, 'store']);
+        Route::patch('/groups/{id}',                       [GroupController::class, 'update']);
+        Route::delete('/groups/{id}',                      [GroupController::class, 'destroy']);
+        Route::post('/groups/{id}/members',                [GroupController::class, 'addMember']);
+        Route::delete('/groups/{id}/members/{learnerId}',  [GroupController::class, 'removeMember']);
+
+        // Corrections IA
+        Route::get('/submissions/pending',             [SubmissionController::class, 'pendingCorrections']);
+        Route::patch('/submissions/{id}/validate',     [SubmissionController::class, 'validateCorrection']);
+    });
+
+// EXERCICES
+Route::middleware(['auth:sanctum', 'role:SOLO|COACHED|ADMIN'])
+    ->group(function () {
+        Route::get('/exercises',      [App\Http\Controllers\ExerciseController::class, 'index']);
+        Route::get('/exercises/{id}', [App\Http\Controllers\ExerciseController::class, 'show']);
+    });
+
+Route::middleware(['auth:sanctum', 'role:ADMIN'])
+    ->group(function () {
+        Route::post('/admin/exercises', [App\Http\Controllers\ExerciseController::class, 'store']);
     });
