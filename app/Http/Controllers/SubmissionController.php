@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Jobs\ProcessAiCorrection;
 use App\Models\Correction;
 use App\Models\Exercise;
+use App\Models\QcmQuestion;
+use App\Models\QcmOption;
 use App\Models\Submission;
 use App\Services\ScoreCalculatorService;
 use Illuminate\Http\JsonResponse;
@@ -17,42 +19,41 @@ class SubmissionController extends Controller
     {
     }
 
-    /**
-     * @OA\Post(
-     *     path="/submissions",
-     *     summary="Soumettre une production (EE ou EO)",
-     *     tags={"Soumissions"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"exercise_id","type"},
-     *             @OA\Property(property="exercise_id",  type="string"),
-     *             @OA\Property(property="type",         type="string", enum={"TEXT","AUDIO","QCM"}),
-     *             @OA\Property(property="content_text", type="string"),
-     *         )
-     *     ),
-     *     @OA\Response(response=201, description="Soumission enregistrée, correction IA en cours"),
-     *     @OA\Response(response=422, description="Erreur de validation")
-     * )
-     */
     public function store(Request $request): JsonResponse
     {
         $request->validate([
             'exercise_id'  => 'required|exists:exercises,id',
             'type'         => 'required|in:TEXT,AUDIO,QCM',
             'content_text' => 'required_if:type,TEXT|nullable|string|max:10000',
-            'audio'        => 'required_if:type,AUDIO|nullable|file|mimes:mp3,wav,m4a,ogg|max:10240',
+            'audio'        => 'required_if:type,AUDIO|nullable|file|mimes:mp3,wav,m4a,ogg,webm|max:10240',
         ]);
 
         $exercise  = Exercise::with('competence')->findOrFail($request->exercise_id);
         $learnerId = $request->user()->id;
 
-        $audioUrl = null;
+        // Vérifier si déjà soumis
+        $existing = Submission::where('learner_id', $learnerId)
+            ->where('exercise_id', $request->exercise_id)
+            ->first();
 
+        if ($existing) {
+            return response()->json([
+                'message'       => 'Vous avez déjà soumis cet exercice.',
+                'submission_id' => $existing->id,
+                'status'        => $existing->status,
+            ], 409);
+        }
+
+        $audioUrl = null;
         if ($request->type === 'AUDIO' && $request->hasFile('audio')) {
-            $path     = $request->file('audio')->store("submissions/{$learnerId}", 's3');
+            $path     = $request->file('audio')->store("submissions/{$learnerId}", 'local');
             $audioUrl = Storage::url($path);
+        }
+
+        // Pour QCM : pré-calculer le score mais laisser en PENDING pour validation coach
+        $qcmScore = null;
+        if ($request->type === 'QCM' && $request->filled('content_text')) {
+            $qcmScore = $this->calculateQcmScore($request->exercise_id, $request->content_text);
         }
 
         $submission = Submission::create([
@@ -63,15 +64,33 @@ class SubmissionController extends Controller
             'audio_url'    => $audioUrl,
             'submitted_at' => now(),
             'status'       => 'PENDING',
+            'score'        => null,
         ]);
 
-        // Déclencher la correction IA en arrière-plan (EE ou EO uniquement)
+        // Pour QCM : créer une correction préliminaire avec le score auto
+        // mais laisser en attente de validation coach
+        if ($request->type === 'QCM' && $qcmScore !== null) {
+            Correction::create([
+                'submission_id'  => $submission->id,
+                'is_ai_assisted' => false,
+                'score'          => $qcmScore,
+                'feedback'       => null,
+                'corrected_text' => null,
+                'ai_raw_result'  => [
+                    'type'    => 'QCM',
+                    'score'   => $qcmScore,
+                    'message' => 'Score QCM calculé automatiquement. En attente de validation coach.',
+                ],
+            ]);
+        }
+
+        // Déclencher la correction IA pour TEXT et AUDIO
         if (in_array($request->type, ['TEXT', 'AUDIO'])) {
             ProcessAiCorrection::dispatch($submission);
         }
 
         return response()->json([
-            'message'    => 'Soumission enregistrée. Correction en cours...',
+            'message'    => 'Soumission enregistrée. En attente de validation.',
             'submission' => [
                 'id'         => $submission->id,
                 'type'       => $submission->type,
@@ -81,24 +100,37 @@ class SubmissionController extends Controller
         ], 201);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/submissions/{id}/correction",
-     *     summary="Voir la correction validée d'une soumission",
-     *     tags={"Soumissions"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="string")),
-     *     @OA\Response(response=200, description="Correction retournée"),
-     *     @OA\Response(response=404, description="Pas encore corrigé")
-     * )
-     */
+    private function calculateQcmScore(string $exerciseId, string $answersJson): float
+    {
+        $answers = json_decode($answersJson, true);
+        if (!$answers) return 0;
+
+        $questions = QcmQuestion::where('exercise_id', $exerciseId)
+            ->with('options')
+            ->get();
+
+        if ($questions->isEmpty()) return 0;
+
+        $correct = 0;
+        foreach ($questions as $question) {
+            $selectedOptionId = $answers[$question->id] ?? null;
+            if (!$selectedOptionId) continue;
+            $correctOption = $question->options->firstWhere('is_correct', true);
+            if ($correctOption && $correctOption->id === $selectedOptionId) {
+                $correct++;
+            }
+        }
+
+        return round(($correct / $questions->count()) * 100, 2);
+    }
+
     public function correction(Request $request, string $id): JsonResponse
     {
         $submission = Submission::where('learner_id', $request->user()->id)
             ->findOrFail($id);
 
         $correction = Correction::where('submission_id', $id)
-            ->whereNotNull('corrected_text')
+            ->whereNotNull('score')
             ->first();
 
         if (!$correction) {
@@ -106,33 +138,20 @@ class SubmissionController extends Controller
         }
 
         return response()->json([
-            'submission_id'   => $id,
-            'score'           => $correction->score,
-            'feedback'        => $correction->feedback,
-            'corrected_text'  => $correction->corrected_text,
-            'is_ai_assisted'  => $correction->is_ai_assisted,
-            'coach_name'      => 'Votre Coach',
-            'created_at'      => $correction->created_at->toIso8601String(),
+            'submission_id'  => $id,
+            'score'          => $correction->score,
+            'feedback'       => $correction->feedback,
+            'corrected_text' => $correction->corrected_text,
+            'is_ai_assisted' => $correction->is_ai_assisted,
+            'coach_name'     => 'Votre Coach',
+            'created_at'     => $correction->created_at->toIso8601String(),
         ]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/admin/submissions/pending",
-     *     summary="Liste des soumissions en attente de validation coach",
-     *     tags={"Admin - Corrections IA"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Response(response=200, description="Soumissions retournées")
-     * )
-     */
     public function pendingCorrections(): JsonResponse
     {
         $submissions = Submission::where('status', 'PENDING')
-            ->with([
-                'learner.user',
-                'exercise.competence',
-                'correction',
-            ])
+            ->with(['learner.user', 'exercise.competence', 'correction'])
             ->latest('submitted_at')
             ->get()
             ->map(fn($s) => [
@@ -141,7 +160,7 @@ class SubmissionController extends Controller
                 'exercise_title' => $s->exercise->title,
                 'competence'     => $s->exercise->competence->code,
                 'type'           => $s->type,
-                'content_text'   => $s->content_text,
+                'content_text'   => $this->formatContentText($s),
                 'audio_url'      => $s->audio_url,
                 'submitted_at'   => $s->submitted_at?->toIso8601String(),
                 'ai_result'      => $s->correction?->ai_raw_result,
@@ -151,26 +170,53 @@ class SubmissionController extends Controller
         return response()->json($submissions);
     }
 
+    private function formatContentText(Submission $s): ?string
+    {
+        if ($s->type !== 'QCM' || !$s->content_text) {
+            return $s->content_text;
+        }
+
+        $answers = json_decode($s->content_text, true);
+        if (!$answers) return $s->content_text;
+
+        $questions = QcmQuestion::where('exercise_id', $s->exercise_id)
+            ->with('options')
+            ->get()
+            ->keyBy('id');
+
+        $lines = [];
+        foreach ($answers as $questionId => $optionId) {
+            $question = $questions[$questionId] ?? null;
+            if (!$question) continue;
+
+            $selectedOption = $question->options->firstWhere('id', $optionId);
+            $correctOption  = $question->options->firstWhere('is_correct', true);
+            $isCorrect      = $selectedOption?->id === $correctOption?->id;
+
+            $lines[] = ($isCorrect ? '✅' : '❌') . ' ' . $question->question
+                . "\n   Réponse : " . ($selectedOption?->content ?? '—')
+                . ($isCorrect ? '' : "\n   Correct  : " . ($correctOption?->content ?? '—'));
+        }
+
+        return implode("\n\n", $lines);
+    }
+
     /**
-     * @OA\Patch(
-     *     path="/admin/submissions/{id}/validate",
-     *     summary="Valider ou modifier la correction IA avant envoi à l'apprenant",
-     *     tags={"Admin - Corrections IA"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="string")),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"corrected_text","score","feedback"},
-     *             @OA\Property(property="corrected_text", type="string"),
-     *             @OA\Property(property="score",          type="number"),
-     *             @OA\Property(property="feedback",       type="string")
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Correction validée et envoyée à l'apprenant"),
-     *     @OA\Response(response=404, description="Soumission non trouvée")
-     * )
+     * Déclencher manuellement la correction IA (si elle a échoué ou n'a pas tourné)
      */
+    public function triggerAiCorrection(string $id): JsonResponse
+    {
+        $submission = Submission::with('exercise.competence')->findOrFail($id);
+
+        if (!in_array($submission->type, ['TEXT', 'AUDIO'])) {
+            return response()->json(['message' => 'Correction IA non applicable pour ce type.'], 422);
+        }
+
+        ProcessAiCorrection::dispatch($submission);
+
+        return response()->json(['message' => 'Correction IA relancée. Rechargez dans quelques secondes.']);
+    }
+
     public function validateCorrection(Request $request, string $id): JsonResponse
     {
         $request->validate([
@@ -180,19 +226,22 @@ class SubmissionController extends Controller
         ]);
 
         $submission = Submission::with('learner', 'exercise.competence')->findOrFail($id);
-        $correction = Correction::where('submission_id', $id)->firstOrFail();
+        $correction = Correction::where('submission_id', $id)->firstOrNew(['submission_id' => $id]);
 
-        $correction->update([
+        $correction->fill([
             'coach_id'       => $request->user()->id,
             'corrected_text' => $request->corrected_text,
             'score'          => $request->score,
             'feedback'       => $request->feedback,
-        ]);
+        ])->save();
 
         $submission->update(['status' => 'CORRECTED', 'score' => $request->score]);
 
-        // Mettre à jour le score de la compétence
-        $this->scoreService->updateGlobalScore($submission->learner_id);
+        $this->scoreService->updateCompetenceScore(
+            $submission->learner_id,
+            $submission->exercise->competence->code,
+            $request->score
+        );
 
         return response()->json(['message' => 'Correction validée et transmise à l\'apprenant.']);
     }

@@ -28,6 +28,26 @@ class ScoreCalculatorService
         return round($totalScore / $totalWeight, 2);
     }
 
+    // Met à jour le score d'une compétence après correction validée
+    public function updateCompetenceScore(string $learnerId, string $competenceCode, float $newScore): void
+    {
+        $competence = Competence::where('code', $competenceCode)->first();
+        if (!$competence) return;
+
+        $progress = Progress::where('learner_id', $learnerId)
+            ->where('competence_id', $competence->id)
+            ->first();
+
+        if ($progress) {
+            // Moyenne glissante : 70% ancien score + 30% nouveau score
+            $updatedScore = round(($progress->score * 0.7) + ($newScore * 0.3), 2);
+            $progress->update(['score' => $updatedScore]);
+        }
+
+        // Recalculer le score global
+        $this->updateGlobalScore($learnerId);
+    }
+
     // Met à jour le score global dans la table learners
     public function updateGlobalScore(string $learnerId): float
     {
